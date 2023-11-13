@@ -1,28 +1,31 @@
-const mysql = require('mysql');
-let connection;
+require('dotenv').config()
+var mysql = require('mysql');
+var connection;
 
-async function connectDatabase()
+function connectDatabase()
 {
-    connection = mysql.createConnection({
-        host:"mondo.mysql.database.azure.com", 
-        user:"Mondo", 
-        password:"Mindo2023*", 
-        database:"mondoc", 
-        port:3306,
-        // ssl: { ca: fs.readFileSync("{ca-cert filename}") },
-      })
-    connection.connect();
+    if(!connection)
+    {
+        connection = mysql.createConnection({
+          host: process.env.DB_HOST,
+          user: process.env.DB_USERNAME,
+          password: process.env.DB_PASSWORD,
+          database: process.env.DB_NAME,
+          port: 3306,
+       });
+
+        connection.connect(function(err)
+        {
+            if(!err)
+            {
+                console.log('base de datos conectada' +process.env.DB_NAME);
+            }
+            else
+            {
+                console.log('Error en la conexion con la base de datos');
+            }
+        });
+    }
+    return connection;
 }
-const makeQuery = (query, data) => {
-    return new Promise((resolve, reject) => {
-      connection.query(query, data, (error, results) => {
-        if (error) return reject(error);
-  
-        resolve(results);
-      });
-    });
-  };
-
-module.exports = {connectDatabase,connection,makeQuery};
-
-//
+module.exports = connectDatabase();
