@@ -34,7 +34,7 @@ app.use(function (req, res, next)
 
 // Stio web al que desea permitir que se conecte
 
-res.setHeader('Access-Control-Allow-Origin', 'http://localhost:4200');
+res.setHeader('Access-Control-Allow-Origin', 'https://inventarios-front.vercel.app/');
 
 // A que métodos que desea dar permisos
 
