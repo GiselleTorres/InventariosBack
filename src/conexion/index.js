@@ -4,15 +4,16 @@ var connection;
 
 function connectDatabase()
 {
+    console.log(process.env.DB_NAME)
     if(!connection)
     {
         connection = mysql.createConnection({
-          host: process.env.DB_HOST,
-          user: process.env.DB_USERNAME,
-          password: process.env.DB_PASSWORD,
-          database: process.env.DB_NAME,
-          port: 3306,
-       });
+            host: process.env.DB_HOST,
+            user: process.env.DB_USERNAME,
+            password: process.env.DB_PASSWORD,
+            database: process.env.DB_NAME,
+            port: 3306,
+         });
 
         connection.connect(function(err)
         {

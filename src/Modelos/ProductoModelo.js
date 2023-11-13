@@ -1,78 +1,105 @@
-const { response } = require("express");
-const { connection, makeQuery } = require("../conexion/index.js");
+//#region METODO LISTAR
+const connection = require('../conexion');
 
 var ProductoModelo = {};
 
-const getProductos = (req, res = response) => {
-    var sql =
-        "SELECT	" +
-        " P. `ID_PRODUCTO`, " +
-        " P. `NOM_PRODUCTO`," +
-        " C. `CATALOGO` AS 'CATEGORIA_PRODUCTO',   " +
-        " B. `CATALOGO` AS 'CLASE_PRODUCTO'  " +
-        " FROM `producto` AS P " +
-        " INNER JOIN `catalogo` AS C ON P. `CATEGORIA_PRODUCTO` =  C. `ID_CATALOGO`" +
-        " INNER JOIN `catalogo` AS B ON P. `CLASE_PRODUCTO` =  B. `ID_CATALOGO` " +
-        "ORDER BY `ID_PRODUCTO`";
+ProductoModelo.getProductos = function(callback)
+{
+    if(connection)
+    {
+    var sql = "SELECT	"+
+    " P. `ID_PRODUCTO`, "+
+    " P. `NOM_PRODUCTO`,"+
+    " C. `CATALOGO` AS 'CATEGORIA_PRODUCTO',   "+
+    " B. `CATALOGO` AS 'CLASE_PRODUCTO'  "+
+    " FROM `producto` AS P "+
+    " INNER JOIN `catalogo` AS C ON P. `CATEGORIA_PRODUCTO` =  C. `ID_CATALOGO`"+
+    " INNER JOIN `catalogo` AS B ON P. `CLASE_PRODUCTO` =  B. `ID_CATALOGO` "+
+    "ORDER BY `ID_PRODUCTO`";
 
-    makeQuery(sql).then((result) => res.json(result)).catch((err) => res.status(500).json(err));
+    connection.query(sql, function(error, rows)
+    {
+        if(error)
+        {
+            throw error;
+        }
+            else
+        {
+            callback(null, rows);
+        }
+    });
+}
+}
+module.exports = ProductoModelo
+//#endregion
+//#region METODO INSERTAR
+ProductoModelo.insertproducto = function (ProductoData, callback) {
+    if (connection) {
+        var sql = " INSERT INTO producto SET ?";
+
+        connection.query(sql, ProductoData, function (error, result) {
+            console.log(" 44 Producto "+ProductoData.ID_PRODUCTO+" ini "
+            +"ini"+ProductoData.NOM_PRODUCTO+"ini"+ProductoData.CATEGORIA_PRODUCTO+"ini"+
+            ProductoData.CLASE_PRODUCTO
+    ); 
+            
+            if (error) {
+                throw error;
+
+            } else {
+                callback(null, { "msg": "Registro insertado" });
+            }
+        });
+    }
 };
+//#endregion
+//#region METODO MODIFICAR
+ProductoModelo.updateProducto = function(ProductoData, callback){
+    if(connection){
+        var sql = "UPDATE producto SET NOM_PRODUCTO = "+
+        connection.escape(ProductoData.NOM_PRODUCTO)
+        +", CATEGORIA_PRODUCTO = "+
+        connection.escape(ProductoData.CATEGORIA_PRODUCTO)
+        +", CLASE_PRODUCTO = "+
+        connection.escape(ProductoData.CLASE_PRODUCTO)
+        +" WHERE ID_PRODUCTO = "+
+        connection.escape(ProductoData.ID_PRODUCTO)+";";
+        
+        connection.query(sql, function(error, result){
+            if(error){
+                throw error;
+            }else{
+                callback(null, {"msg:": "Registro Actualizado"});
+            }
+        });
+    }
+}
+//#endregion
+//#region METODO CONSULTA ID
+ProductoModelo.getProductosid = function(id, callback)
+{
+    if(connection)
+    {
+    
+        var sql = "SELECT	"+
+        " P. `ID_PRODUCTO`, "+
+        " P. `NOM_PRODUCTO`,"+
+        " C. `CATALOGO` AS 'CATEGORIA_PRODUCTO',   "+
+        " B. `CATALOGO` AS 'CLASE_PRODUCTO'  "+
+        " FROM `producto` AS P "+
+        " INNER JOIN `catalogo` AS C ON P. `CATEGORIA_PRODUCTO` =  C. `ID_CATALOGO`"+
+        " INNER JOIN `catalogo` AS B ON P. `CLASE_PRODUCTO` =  B. `ID_CATALOGO` "+
+        " WHERE `ID_PRODUCTO` = "+connection.escape(id)+
+        "ORDER BY `ID_PRODUCTO`"
+         ";";
 
-const insertProductos = (req, res = response) => {
-    var ProductoData = {
-        ID_PRODUCTO: null,
-        NOM_PRODUCTO: req.body.NOM_PRODUCTO,
-        CATEGORIA_PRODUCTO: req.body.CATEGORIA_PRODUCTO,
-        CLASE_PRODUCTO: req.body.CLASE_PRODUCTO,
-    };
-
-    var sql = " INSERT INTO producto SET ?";
-
-    makeQuery(sql, ProductoData).then(() => res.json("registro insertado con exito")).catch((err) => res.status(500).json(err));
+        connection.query(sql, function(error, rows){
+            if(error){
+                throw error;
+            }else{
+                callback(null, rows);
+            }
+        });
+    }
 };
-
-const updateProducto = (req, res = response) => {
-    var ProductoData = {
-        ID_PRODUCTO: req.body.ID_PRODUCTO,
-        NOM_PRODUCTO: req.body.NOM_PRODUCTO,
-        CATEGORIA_PRODUCTO: req.body.CATEGORIA_PRODUCTO,
-        CLASE_PRODUCTO: req.body.CLASE_PRODUCTO,
-    };
-
-    var sql =
-        "UPDATE producto SET NOM_PRODUCTO = '" +
-        ProductoData.NOM_PRODUCTO +
-        "', CATEGORIA_PRODUCTO = " +
-        ProductoData.CATEGORIA_PRODUCTO +
-        ", CLASE_PRODUCTO = " +
-        ProductoData.CLASE_PRODUCTO +
-        " WHERE ID_PRODUCTO = " +
-        ProductoData.ID_PRODUCTO +
-        ";";
-
-    makeQuery(sql).then(() => res.json("registro actualizado con exito")).catch((err) => res.status(500).json(err));
-};
-
-
-const getProductosid = (req, res = response) => {
-
-    var id = req.params.id;
-
-    var sql =
-        "SELECT	" +
-        " P. `ID_PRODUCTO`, " +
-        " P. `NOM_PRODUCTO`," +
-        " C. `CATALOGO` AS 'CATEGORIA_PRODUCTO',   " +
-        " B. `CATALOGO` AS 'CLASE_PRODUCTO'  " +
-        " FROM `producto` AS P " +
-        " INNER JOIN `catalogo` AS C ON P. `CATEGORIA_PRODUCTO` =  C. `ID_CATALOGO`" +
-        " INNER JOIN `catalogo` AS B ON P. `CLASE_PRODUCTO` =  B. `ID_CATALOGO` " +
-        " WHERE `ID_PRODUCTO` = " +
-        id +
-        " ORDER BY `ID_PRODUCTO`";
-    (";");
-
-    makeQuery(sql).then((result) => res.json(result)).catch((err) => res.status(500).json(err));
-};
-
-module.exports = { getProductos, insertProductos, updateProducto, getProductosid };
+//#endregion

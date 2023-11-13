@@ -1,81 +1,120 @@
 //#region METODO LISTAR
-const { response } = require('express');
-const { makeQuery } = require('../conexion/index.js');
+const connection = require('../conexion');
 
-const getCatalogos = (req, res = response) => {
+var CatalogoModelo = {};
 
-    var sql = "SELECT * FROM CATALOGO";
+CatalogoModelo.getCatalogos = function(callback)
+{
+    if(connection)
+    {
+    
+    var sql = "SELECT C.`ID_CATALOGO`,"+
+    " C.`CATALOGO`,  N.`CATALOGO` AS 'TIPO_CATALOGO' "+
+    "FROM `catalogo` AS C 	INNER JOIN `catalogo` AS N ON C. "+
+    "`TIPO_CATALOGO` = N. `ID_CATALOGO` ORDER BY`TIPO_CATALOGO`";
 
-    makeQuery(sql).then((result) => res.json(result)).catch((err) => res.status(500).json(error));
-
+    connection.query(sql, function(error, rows)
+    {
+        if(error)
+        {
+            throw error;
+        }
+            else
+        {
+            callback(null, rows);
+        }
+    });
 }
-
+}
+    module.exports = CatalogoModelo;
 //#endregion
 //#region METODO INSERTAR
-const insertCatalogo = (req, res = response) => {
+CatalogoModelo.insertCatalogo = function (CatalogoData, callback) {
+    if (connection) {
+        var sql = " INSERT INTO catalogo SET ?";
 
-    var CatalogoData = {
-        //ID_CATALOGO: req.body.ID_CATALOGO,
-        CATALOGO: req.body.CATALOGO,
-        TIPO_CATALOGO: req.body.TIPO_CATALOGO
-    };
+        connection.query(sql, CatalogoData, function (error, result) {
+            console.log(" 44 Catalogo "+CatalogoData.Catalogo+" ini "
+            +CatalogoData.TIPO_CATALOGO);
+            if (error) {
+                throw error;
 
-    var sql = " INSERT INTO catalogo SET ?";
-
-    makeQuery(sql, CatalogoData).then(() => res.json("registro insertado con exito")).catch((err) => res.status(500).json(err));
+            } else {
+                callback(null, { "msg": "Registro insertado" });
+            }
+        });
+    }
 };
 //#endregion
 //#region METODO MODIFICAR
-const updateCatalogo = (req, res = response) => {
-    var CatalogoData={
-        ID_CATALOGO: req.body.ID_CATALOGO,
-        CATALOGO: req.body.CATALOGO,
-        TIPO_CATALOGO: req.body.TIPO_CATALOGO
-    };
+CatalogoModelo.updateCatalogo = function(CatalogoData,callback){
+    if(connection){
+        var sql = "UPDATE catalogo SET CATALOGO = "+
+        connection.escape(CatalogoData.CATALOGO)+
+        ", TIPO_CATALOGO = "+
+        connection.escape(CatalogoData.TIPO_CATALOGO)+
+        " WHERE ID_CATALOGO = "+
+        connection.escape(CatalogoData.ID_CATALOGO)+";";
 
-    var sql = "UPDATE catalogo SET CATALOGO = '" +
-        CatalogoData.CATALOGO+
-        "', TIPO_CATALOGO = " +
-        CatalogoData.TIPO_CATALOGO +
-        " WHERE ID_CATALOGO = " +
-        CatalogoData.ID_CATALOGO+ ";";
-
-    makeQuery(sql).then(() => res.json("registro actualizado con exito")).catch((err) => res.status(500).json(err));
-
+        connection.query(sql, function(error, result){
+            if(error){
+                throw error;
+            }else{
+                callback(null, {"MSG: ": "Registro Actualizado"});
+            }
+        });
+    }
 }
 //#endregion
 //#region METODO CONSULTA FORANEA
-const getCatalogosTC = (req, res = response) => {
-
-    var tipcat = req.params.tipcat;
-
-    var sql = "SELECT C.`ID_CATALOGO`," +
-        " C.`CATALOGO`,  N.`CATALOGO` AS 'TIPO_CATALOGO' " +
-        "   FROM `catalogo` AS C    INNER JOIN `catalogo` AS N ON C. " +
-        "`TIPO_CATALOGO` = N. `ID_CATALOGO` " +
-        "WHERE C.`TIPO_CATALOGO` = " +
-        tipcat +
+CatalogoModelo.getCatalogosTC = function(tipcat, callback)
+{
+    if(connection)
+    {
+    
+        var sql = "SELECT C.`ID_CATALOGO`,"+
+        " C.`CATALOGO`,  N.`CATALOGO` AS 'TIPO_CATALOGO' "+
+        "   FROM `catalogo` AS C 	INNER JOIN `catalogo` AS N ON C. "+
+        "`TIPO_CATALOGO` = N. `ID_CATALOGO` "+
+        "WHERE C.`TIPO_CATALOGO` = "+
+        connection.escape(tipcat)+
         " ORDER BY C. ID_CATALOGO ;";
 
-    makeQuery(sql).then((result) => res.json(result)).catch((err) => res.status(500).json(err));
+        connection.query(sql, function(error, rows){
+            if(error){
+                throw error;
+            }else{
+                callback(null, rows);
+            }
+        });
+    }
 };
 //#endregion
 //#region METODO CONSULTAR ID DENTRO FORANEA
-const getCatalogosID = (req, res = response) => {
+CatalogoModelo.getCatalogosID = function(tipcat, id,  callback)
+{
 
-    var tipcat = req.params.tipcat;
-    var id = req.params.id;
+        console.log("  aca 33 " + tipcat + " -  " + id);
+    if(connection)
+    {
+    
+        var sql = "SELECT C.`ID_CATALOGO`,"+
+        " C.`CATALOGO`,  N.`CATALOGO` AS 'TIPO_CATALOGO' "+
+        " FROM `catalogo` AS C 	INNER JOIN `catalogo` AS N ON C. "+
+        " `TIPO_CATALOGO` = N. `ID_CATALOGO` "+
+        " WHERE C.`TIPO_CATALOGO` = " + connection.escape(tipcat)+
+        " AND C.`ID_CATALOGO` = "+ connection.escape(id)+ ";";
 
-    var sql = "SELECT C.`ID_CATALOGO`," +
-        " C.`CATALOGO`,  N.`CATALOGO` AS 'TIPO_CATALOGO' " +
-        " FROM `catalogo` AS C  INNER JOIN `catalogo` AS N ON C. " +
-        " `TIPO_CATALOGO` = N. `ID_CATALOGO` " +
-        " WHERE C.`TIPO_CATALOGO` = " + tipcat +
-        " AND C.`ID_CATALOGO` = " + id + ";";
+        console.log("  aca 67 " + tipcat + " -  " + id);
 
-    makeQuery(sql).then((result) => res.json(result)).catch((err) => res.status(500).json(err));
+        
+        connection.query(sql, function(error, rows){
+            if(error){
+                throw error;
+            }else{
+                callback(null, rows);
+            }
+        });
+    }
 };
-
-;
-module.exports = { getCatalogos, insertCatalogo, getCatalogosTC, getCatalogosID, updateCatalogo }
 //#endregion

@@ -1,81 +1,104 @@
 //#region METODO LISTAR
-const { response, request } = require('express');
-const { connection, makeQuery } = require('../conexion/index.js');
+const connection = require('../conexion');
 
 var PersonalModelo = {};
 
-const getPersonals = (req, res = response) => {
+PersonalModelo.getPersonals = function(callback)
+{
+    if(connection)
+    {
+    var sql = " SELECT p.`ID_PERSONAL`, CONCAT(p.`PNOM_PERSONAL`, ' '"+
+    " , p.`SNOM_PERSONAL`, ' ', p.`PAPELL_PERSONAL`, ' ', p.`SAPELL_PERSONAL`)"+
+    " AS 'PERSONA', c.`CATALOGO` AS 'TIPO_DOC', p.`NUM_DOC`, d.`CATALOGO` AS 'CARGO_PERSONA' "+
+    "FROM `personal` AS p INNER JOIN `catalogo`AS c ON p.`TIPO_DOC`= c.`ID_CATALOGO` "+
+    "INNER JOIN `catalogo`AS d ON p.`CARGO_PERSONA`= d.`ID_CATALOGO` ORDER BY `ID_PERSONAL`";
 
-    var sql = " SELECT p.`ID_PERSONAL`, CONCAT(p.`PNOM_PERSONAL`, ' '" +
-        " , p.`SNOM_PERSONAL`, ' ', p.`PAPELL_PERSONAL`, ' ', p.`SAPELL_PERSONAL`)" +
-        " AS 'PERSONA', c.`CATALOGO` AS 'TIPO_DOC', p.`NUM_DOC`, d.`CATALOGO` AS 'CARGO_PERSONA' " +
-        "FROM `personal` AS p INNER JOIN `catalogo`AS c ON p.`TIPO_DOC`= c.`ID_CATALOGO` " +
-        "INNER JOIN `catalogo`AS d ON p.`CARGO_PERSONA`= d.`ID_CATALOGO` ORDER BY `ID_PERSONAL`";
-
-    makeQuery(sql).then((result) => res.json(result)).catch((err) => res.status(500).json(err));
-}
-
-
-//#endregion
-//#region METODO INSERTAR
-const insertPersonal = (req, res = response) => {
-
-    var PersonalData = {
-
-        TIPO_DOC: req.body.TIPO_DOC,
-        PNOM_PERSONAL: req.body.PNOM_PERSONAL,
-        SNOM_PERSONAL: req.body.SNOM_PERSONAL,
-        PAPELL_PERSONAL: req.body.PAPELL_PERSONAL,
-        SAPELL_PERSONAL: req.body.SAPELL_PERSONAL,
-        NUM_DOC: req.body.NUM_DOC,
-        CARGO_PERSONA: req.body.CARGO_PERSONA
-    };
-
-    var sql = " INSERT INTO personal SET ?";
-
-    makeQuery(sql, PersonalData).then(() => res.json("registro insertado con exito")).catch((err) => res.status(500).json(err));
-
-};
-
-//#endregion
-// //#region METODO MODIFICAR
-const updatePersonal = (req = request, res = response) => {
-    let query = ""
-    var PersonalData = {
-        //ID_PERSONAL: req.body.ID_PERSONAL,
-        TIPO_DOC: req.body.TIPO_DOC,
-        PNOM_PERSONAL: req.body.PNOM_PERSONAL,
-        SNOM_PERSONAL: req.body.SNOM_PERSONAL,
-        PAPELL_PERSONAL: req.body.PAPELL_PERSONAL,
-        SAPELL_PERSONAL: req.body.SAPELL_PERSONAL,
-        NUM_DOC: req.body.NUM_DOC,
-        CARGO_PERSONA: req.body.CARGO_PERSONA
-    };
-    Object.keys(PersonalData).forEach((brand) => {
-        if (PersonalData[brand]) {
-            query += `${brand} = '${PersonalData[brand]}', `;
+    connection.query(sql, function(error, rows)
+    {
+        if(error)
+        {
+            throw error;
+        }
+            else
+        {
+            callback(null, rows);
         }
     });
-
-
-    query = query.slice(0, -2) + query.slice(-1);
-
-    const { id } = req.params
-    var sql = `UPDATE personal SET ${query.trim()} WHERE ID_PERSONAL =${id} ;`
-
-    makeQuery(sql, PersonalData).then(() => res.json("registro modificado con exito")).catch((err) => res.status(500).json(err));
 }
+}
+module.exports = PersonalModelo;
+//#endregion
+//#region METODO INSERTAR
+PersonalModelo.insertPersonal = function (personalData, callback) {
+    if (connection) {
+        var sql = " INSERT INTO personal SET ?";
 
+        connection.query(sql, personalData, function (error, result) {
+            console.log(" 55 personal "+personalData.PNOM_PERSONAL+" ini "
+            +personalData.SNOM_PERSONAL+"ini"+personalData.PAPELL_PERSONAL+"ini"
+            +personalData.SAPELL_PERSONAL+"ini"+personalData.TIPO_DOC+"ini"
+            +personalData.NUM_DOC+"ini"+personalData.CARGO_PERSONA); 
+
+            
+            if (error) {
+                throw error;
+
+            } else {
+                callback(null, { "msg": "Registro insertado" });
+            }
+        });
+    }
+};
+//#endregion
+//#region METODO MODIFICAR
+PersonalModelo.updatePersonal = function(PersonalData, callback){
+    if(connection){
+        var sql = "UPDATE personal SET PNOM_PERSONAL = "+
+        connection.escape(PersonalData.PNOM_PERSONAL)
+        +", SNOM_PERSONAL = "+
+        connection.escape(PersonalData.SNOM_PERSONAL)
+        +", PAPELL_PERSONAL = "+
+        connection.escape(PersonalData.PAPELL_PERSONAL)
+        +", SAPELL_PERSONAL = "+ 
+        connection.escape(PersonalData.SAPELL_PERSONAL)
+        +", TIPO_DOC = "+
+        connection.escape(PersonalData.TIPO_DOC)
+        +", NUM_DOC = "+
+        connection.escape(PersonalData.NUM_DOC)
+        +", CARGO_PERSONA = "+
+        connection.escape(PersonalData.CARGO_PERSONA)
+        +" WHERE ID_PERSONAL = "+
+        connection.escape(PersonalData.ID_PERSONAL)+";";
+        
+        connection.query(sql, function(error, result){
+            if(error){
+                throw error;
+            }else{
+                callback(null, {"msg:": "Registro Actualizado"});
+            }
+        });
+    }
+}
 //#endregion
 //#region METODO CONSULTA ID
-const getPersonalsID = (req, res = response) => {
+PersonalModelo.getPersonalsid = function(id, callback)
+{
+    if(connection)
+    {
+    
+        var sql = " SELECT p.`ID_PERSONAL`, CONCAT(p.`PNOM_PERSONAL`, ' '"+
+        " , p.`SNOM_PERSONAL`, ' ', p.`PAPELL_PERSONAL`, ' ', p.`SAPELL_PERSONAL`)"+
+        " AS 'PERSONA', c.`CATALOGO` AS 'TIPO_DOC', p.`NUM_DOC`, d.`CATALOGO` AS 'CARGO_PERSONA' "+
+        " FROM `personal` AS p INNER JOIN `catalogo`AS c ON p.`TIPO_DOC`= c.`ID_CATALOGO` "+
+        " INNER JOIN `catalogo`AS d ON p.`CARGO_PERSONA`= d.`ID_CATALOGO` WHERE p.`ID_PERSONAL`= "+ connection.escape(id)+ " ORDER BY p.`ID_PERSONAL`;";
 
-    const { id } = req.params
-    var sql = `SELECT * FROM PERSONAL where ID_PERSONAL =${id} ;`
-
-
-    makeQuery(sql).then((result) => res.json(result)).catch((err) => res.status(500).json(err));
+        connection.query(sql, function(error, rows){
+            if(error){
+                throw error;
+            }else{
+                callback(null, rows);
+            }
+        });
+    }
 };
-
-module.exports = { getPersonals, insertPersonal, getPersonalsID, updatePersonal }
 //#endregion
